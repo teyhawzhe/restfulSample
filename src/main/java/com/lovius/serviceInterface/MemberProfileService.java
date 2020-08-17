@@ -10,4 +10,6 @@ public interface MemberProfileService {
 	
 	public void update(MemberProfile memberProfile);
 	
+	public void updateDynamic(MemberProfile memberProfile);
+	
 }

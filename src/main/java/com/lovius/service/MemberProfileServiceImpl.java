@@ -27,10 +27,13 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 	@Override
 	public void update(MemberProfile memberProfile) {
 		memberProfileRepository.update(memberProfile);
-		throw new UpdateRollBackException();
 	}
 
-	
-	
+	@Transactional(rollbackFor = UpdateRollBackException.class)
+	@Override
+	public void updateDynamic(MemberProfile memberProfile) {
+		memberProfileRepository.updateDynamic(memberProfile);
+	}
+
 	
 }

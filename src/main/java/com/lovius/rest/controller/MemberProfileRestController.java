@@ -2,10 +2,17 @@ package com.lovius.rest.controller;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,13 +26,13 @@ import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping(value = "/member/profile")
-@Api(tags = "會員資料" , description = "1.尋找會員資料  2.新增會員資料  3.更新會員資料  4.刪除會員資料")
+@Api(tags = "會員資料", description = "尋找、新增、.更新、.刪除會員資料")
 public class MemberProfileRestController {
 
 	@Autowired
 	private MemberProfileService memberProfileService;
 
-	@ApiOperation(value = "尋找所有會員資料", notes = "依據ID排序" , position = 0)
+	@ApiOperation(value = "尋找所有會員資料", notes = "依據ID排序")
 	@GetMapping("/findAllOrderById")
 	public RMessage findAllOrderById() {
 
@@ -34,17 +41,58 @@ public class MemberProfileRestController {
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfileLists);
 	}
 
-	@GetMapping("/update")
-	public RMessage updateById() {
+	@ApiOperation(value = "更新會員資料", notes = "依據ID作更新")
+	@PutMapping
+	public RMessage updateById(@Valid MemberProfile memberProfile, BindingResult br) {
 
-		MemberProfile memberProfile = new MemberProfile();
-		memberProfile.setId("lovius");
-		memberProfile.setAge(19);
-		
+		if (br.hasErrors()) {
+			StringBuilder sb = new StringBuilder();
+			for (ObjectError index : br.getAllErrors()) {
+				sb.append(index.getDefaultMessage() + "\n");
+			}
+			return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateFailed, sb.toString());
+		}
+
 		memberProfileService.update(memberProfile);
-		
+		return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateSuccess);
+	}
+	
+	@ApiOperation(value = "動態更新會員資料", notes = "依據ID作更新")
+	@PutMapping("/dy")
+	public RMessage updateDynamicById(@Valid MemberProfile memberProfile, BindingResult br) {
+
+		if (br.hasErrors()) {
+			StringBuilder sb = new StringBuilder();
+			for (ObjectError index : br.getAllErrors()) {
+				sb.append(index.getDefaultMessage() + "\n");
+			}
+			return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateFailed, sb.toString());
+		}
+		memberProfileService.updateDynamic(memberProfile);
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateSuccess);
 	}
 
-	
+	@ApiOperation(value = "新增會員資料", notes = "新增會員資料，ID為PK")
+	@PostMapping
+	public RMessage insert(@Valid MemberProfile memberProfile, BindingResult br) {
+		
+		if (br.hasErrors()) {
+			StringBuilder sb = new StringBuilder();
+			for (ObjectError index : br.getAllErrors()) {
+				sb.append(index.getDefaultMessage() + "\n");
+			}
+			return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateFailed, sb.toString());
+		}
+		
+		memberProfileService.update(memberProfile);
+		return new RMessage(HttpStatus.OK.value(), ResponseMessage.insertSuccess);
+	}
+
+	@ApiOperation(value = "刪除會員資料", notes = "以ID刪除會員資料")
+	@DeleteMapping
+	public RMessage delete(String memberId) {
+
+		return new RMessage(HttpStatus.OK.value(), ResponseMessage.deleteSuccess);
+	}
+
 }
