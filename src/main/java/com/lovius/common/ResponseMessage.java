@@ -2,6 +2,8 @@ package com.lovius.common;
 
 public class ResponseMessage {
 
+	public final static String exception = "請聯繫資訊單位!";
+	
 	public final static String findSuccess = "查詢成功!";
 
 	public final static String findFailed = "查詢失敗!";
