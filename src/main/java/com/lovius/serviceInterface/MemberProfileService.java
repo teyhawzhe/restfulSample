@@ -5,13 +5,15 @@ import java.util.List;
 import com.lovius.model.MemberProfile;
 
 public interface MemberProfileService {
+
+	public List<MemberProfile> findAllOrderById() throws Exception;
+
+	public MemberProfile findById(String id) throws Exception;
 	
-	public List<MemberProfile> findAllOrderById();
-	
-	public MemberProfile findById(String id);
-	
-	public void update(MemberProfile memberProfile);
-	
-	public void updateDynamic(MemberProfile memberProfile);
-	
+	public MemberProfile findByIdDymanicIn() throws Exception;
+
+	public void update(MemberProfile memberProfile) throws Exception;
+
+	public void updateDynamic(MemberProfile memberProfile) throws Exception;
+
 }

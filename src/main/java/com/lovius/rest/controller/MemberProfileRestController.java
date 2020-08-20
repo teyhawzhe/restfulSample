@@ -36,7 +36,7 @@ public class MemberProfileRestController {
 
 	@ApiOperation(value = "尋找所有會員資料", notes = "依據ID排序")
 	@GetMapping("/findAllOrderById")
-	public RMessage findAllOrderById() {
+	public RMessage findAllOrderById() throws Exception {
 
 		List<MemberProfile> memberProfileLists = memberProfileService.findAllOrderById();
 
@@ -45,16 +45,23 @@ public class MemberProfileRestController {
 	
 	@ApiOperation(value = "尋找所有會員資料", notes = "依據ID排序")
 	@GetMapping("/{id}")
-	public RMessage findById(@PathVariable("id") String id) {
+	public RMessage findById(@PathVariable("id") String id) throws Exception {
 		MemberProfile memberProfile = memberProfileService.findById(id);
-		//log.info("memberProfile = " +memberProfile.toString());
+		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfile);
+	}
+	
+	@ApiOperation(value = "尋找所有會員資料IN", notes = "依據ID排序")
+	@GetMapping("/dymanicIn")
+	public RMessage findByIdDymanicIn() throws Exception {
+		MemberProfile memberProfile = memberProfileService.findByIdDymanicIn();
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfile);
 	}
 
+	
+	
 	@ApiOperation(value = "更新會員資料", notes = "依據ID作更新")
 	@PutMapping
-	public RMessage updateById(@Valid MemberProfile memberProfile, BindingResult br) {
-
+	public RMessage updateById(@Valid MemberProfile memberProfile, BindingResult br) throws Exception {
 		if (br.hasErrors()) {
 			StringBuilder sb = new StringBuilder();
 			for (ObjectError index : br.getAllErrors()) {
@@ -69,7 +76,7 @@ public class MemberProfileRestController {
 	
 	@ApiOperation(value = "動態更新會員資料", notes = "依據ID作更新")
 	@PutMapping("/dy")
-	public RMessage updateDynamicById(@Valid MemberProfile memberProfile, BindingResult br) {
+	public RMessage updateDynamicById(@Valid MemberProfile memberProfile, BindingResult br) throws Exception {
 
 		if (br.hasErrors()) {
 			StringBuilder sb = new StringBuilder();
@@ -84,7 +91,7 @@ public class MemberProfileRestController {
 
 	@ApiOperation(value = "新增會員資料", notes = "新增會員資料，ID為PK")
 	@PostMapping
-	public RMessage insert(@Valid MemberProfile memberProfile, BindingResult br) {
+	public RMessage insert(@Valid MemberProfile memberProfile, BindingResult br) throws Exception {
 		
 		if (br.hasErrors()) {
 			StringBuilder sb = new StringBuilder();

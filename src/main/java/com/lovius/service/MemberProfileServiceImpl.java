@@ -1,7 +1,9 @@
 package com.lovius.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import com.lovius.common.exception.UpdateRollBackException;
 import com.lovius.model.MemberProfile;
 import com.lovius.repository.MemberProfileRepository;
 import com.lovius.serviceInterface.MemberProfileService;
+import com.lovius.utils.ClazzToMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,26 +26,39 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 	
 	@Transactional(readOnly = true)
 	@Override
-	public List<MemberProfile> findAllOrderById() {
+	public List<MemberProfile> findAllOrderById() throws Exception {
 		return memberProfileRepository.findAllOrderById();
 	}
 
 	@Transactional(rollbackFor = UpdateRollBackException.class)
 	@Override
-	public void update(MemberProfile memberProfile) {
-		memberProfileRepository.update(memberProfile);
+	public void update(MemberProfile memberProfile) throws Exception {
+		Map<String, Object> param = ClazzToMap.handle(memberProfile);
+	
+		memberProfileRepository.update(param);
 	}
 
 	@Transactional(rollbackFor = UpdateRollBackException.class)
 	@Override
-	public void updateDynamic(MemberProfile memberProfile) {
-		memberProfileRepository.updateDynamic(memberProfile,memberProfile);
+	public void updateDynamic(MemberProfile memberProfile) throws Exception {
+		Map<String, Object> param = ClazzToMap.handle(memberProfile);
+		param.put("NAME", null);
+		memberProfileRepository.updateDynamic(param);
 	}
 
+	@Transactional(readOnly = true)
 	@Override
-	public MemberProfile findById(String id) {
+	public MemberProfile findById(String id) throws Exception {
+		return memberProfileRepository.findById(id,null);
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public MemberProfile findByIdDymanicIn() throws Exception {
 		List<String> ids=List.of("lovius", "1", "2", "3");
-		return memberProfileRepository.findByIdDymaic("lovius",null);
+		Map<String, Object> param = new HashMap<>();
+		param.put("id", ids);
+		return memberProfileRepository.findByIdDymaicIn(param);
 	}
 
 	
