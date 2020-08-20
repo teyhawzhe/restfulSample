@@ -14,8 +14,8 @@ import com.lovius.common.RMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Aspect
-@Component
+//@Aspect
+//@Component
 @Slf4j
 public class AspectTest {
 
@@ -179,7 +179,9 @@ public class AspectTest {
 		for (Object signatureArg : signatureArgs) {
 			log.info("param : " + signatureArg);
 		}
-		log.info("output -> " + result.toString());
+		if(null != result) {
+			log.info("output -> " + result.toString());
+		}
 		log.info("===================================");
 	}
 	

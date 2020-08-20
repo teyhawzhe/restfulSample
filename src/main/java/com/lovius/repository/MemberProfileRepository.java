@@ -15,6 +15,37 @@ public interface MemberProfileRepository {
 	@Select("SELECT * FROM MEMBER_PROFILE ORDER BY ID")
 	public List<MemberProfile> findAllOrderById();
 	
+	@Select("SELECT * FROM MEMBER_PROFILE WHERE ID = #{id} AND Id = #{hi} ")
+	public MemberProfile findById(String id ,String hi);
+	
+	@Select({"<script>",
+		"SELECT * FROM MEMBER_PROFILE",
+		"<trim prefix='WHERE' suffixOverrides='AND|OR' >",
+		 "<if test='id != null' > ID = #{id} AND </if>",
+		 "<if test='hi != null' > ID = #{hi} AND </if>",
+		"</trim>",
+		"</script>"}
+	)
+	public MemberProfile findByIdDymaic(String id ,String hi);
+	
+	@Select({"<script>",
+		"SELECT * FROM MEMBER_PROFILE",
+		"<trim prefix='WHERE' suffixOverrides='AND|OR' >",
+		 "<if test='id != null' > ID IN ",
+		 "<foreach collection='id' index='index' item='id' open='(' separator=',' close=')'>",
+		 "#{id}",
+		 "</foreach>",
+		 "AND </if>",
+		 "<if test='hi != null' > ID IN ",
+		 "<foreach collection='hi' index='index' item='hi' open='(' separator=',' close=')'>",
+		 "#{hi}",
+		 "</foreach>",
+		 "AND </if>",
+		"</trim>",
+		"</script>"}
+	)
+	public MemberProfile findByIdDymaicIn(@Param("id") List<String> id , @Param("hi") List<String> hi);
+	
 	@Update("UPDATE MEMBER_PROFILE SET AGE = #{param.age} WHERE ID = #{param.id}")
 	public void update(@Param("param") MemberProfile memberProfile);
 	
@@ -30,6 +61,7 @@ public interface MemberProfileRepository {
 		"</trim>",
 		"WHERE ID = #{id} ",
 	"</script>"})
-	public void updateDynamic(MemberProfile memberProfile);
+	public void updateDynamic(MemberProfile memberProfile,MemberProfile memberProfile1);
+	
 	
 }

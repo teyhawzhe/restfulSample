@@ -2,16 +2,20 @@ package com.lovius.intercepts;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.util.Properties;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
+import org.apache.ibatis.binding.MapperMethod.ParamMap;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.plugin.Intercepts;
 import org.apache.ibatis.plugin.Invocation;
-import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
@@ -23,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Intercepts({
 		@Signature(method = "query", type = Executor.class, args = { MappedStatement.class, Object.class,
 				RowBounds.class, ResultHandler.class }),
-		@Signature(method = "prepare", type = StatementHandler.class, args = { Connection.class, Integer.class }) })
+		@Signature(method = "prepare", type = StatementHandler.class, args = { Connection.class, Integer.class }),
+		@Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class }) })
 @Slf4j
 public class SelectInterceptor implements Interceptor {
 
@@ -32,100 +37,106 @@ public class SelectInterceptor implements Interceptor {
 
 		if (invocation.getTarget() instanceof StatementHandler) {
 			StatementHandler delegate = (StatementHandler) invocation.getTarget();
+			// 取得sql 物件
 			BoundSql boundSql = delegate.getBoundSql();
-			Object obj = boundSql.getParameterObject();
-			MappedStatement mappedStatement = (MappedStatement) ReflectUtil.getFieldValue(delegate, "mappedStatement");
-			// 拦截到的prepare方法参数是一个Connection对象
+			// 取得sql 字串
 			String sql = boundSql.getSql();
-			Connection connection = (Connection) invocation.getArgs()[0];
-			System.out.println("成功拦截select sql:" + sql);
+			// 取得param 字串
 			Object parameterObject = boundSql.getParameterObject();
 
+			// 因為LIST 有相同為__frch_變數_N 所以採用過濾取出真正的變數
+			Set<ParamType> paramKey = new LinkedHashSet<>();
+			for (ParameterMapping index : boundSql.getParameterMappings()) {
+				// IN 特別處理
+				if (index.getProperty().startsWith("__frch_")) {
+					String param = index.getProperty().replaceAll("__frch_", "");
+					param = param.substring(0, param.lastIndexOf("_"));
+					ParamType paramType = new ParamType();
+					paramType.setParam(param);
+					paramType.setType(null);
+					paramKey.add(paramType);
+				} else if (index.getProperty().indexOf(".") > 0) {
+					ParamType paramType = new ParamType();
+					paramType.setParam(index.getProperty().split("\\.")[1]);
+					paramType.setType("CLAZZ");
+					paramKey.add(paramType);
+				} else {
+					ParamType paramType = new ParamType();
+					paramType.setParam(index.getProperty());
+					paramType.setType(null);
+					paramKey.add(paramType);
+				}
+			}
+
+			log.info("paramKey size " + paramKey.size());
+			log.info("param key " + paramKey);
+
+			// 取得?的value
+			ParamMap<Object> paramMap = (ParamMap<Object>) parameterObject;
+
+			log.info("paramMap " + paramMap);
+
+			List<Object> value = new ArrayList<>();
+
+			for (ParamType index : paramKey) {
+
+				if (null == index.getType()) {
+					Object valueMap = paramMap.get(index.getParam());
+					if (valueMap instanceof List) {
+						List<Object> valueList = (List<Object>) valueMap;
+						for (Object subIndex : valueList) {
+							value.add(subIndex);
+						}
+					} else if (valueMap instanceof String) {
+						value.add(valueMap);
+					} else if (valueMap instanceof Number) {
+						value.add(valueMap);
+					} else {
+						log.info(".......");
+					}
+				} else {
+					Object valueMap = paramMap.get("param");
+					Field[] declaredFields = valueMap.getClass().getDeclaredFields();
+					for (Field field : declaredFields) {
+						field.setAccessible(true);
+						if (index.getParam().equals(field.getName())) {
+							if((field.get(valueMap) instanceof Integer)) {
+								value.add(Integer.valueOf(String.valueOf(field.get(valueMap))));
+							}else if((field.get(valueMap) instanceof String)) {
+								value.add(String.valueOf(field.get(valueMap)));
+							}
+							
+						}
+					}
+
+				}
+
+			}
+
+			for (Object index : value) {
+				if (index instanceof Number) {
+					sql = sql.replaceFirst("\\?", String.valueOf(index));
+				} else {
+					sql = sql.replaceFirst("\\?", "'" + index + "'");
+				}
+			}
+
+			// log.info("value "+value);
+
+			// 組合好的sql
+			log.info("merge Sql " + sql);
 		}
 		return invocation.proceed();
 
 	}
 
-	@Override
-	public Object plugin(Object target) {
-		return Plugin.wrap(target, this);
-	}
-
-	@Override
-	public void setProperties(Properties properties) {
-		String prop1 = properties.getProperty("prop1");
-		String prop2 = properties.getProperty("prop2");
-		System.out.println(prop1 + "------" + prop2);
-	}
-
-	private static class ReflectUtil {
-		/**
-		 * 利用反射获取指定对象的指定属性
-		 * 
-		 * @param obj       目标对象
-		 * @param fieldName 目标属性
-		 * @return 目标属性的值
-		 */
-		public static Object getFieldValue(Object obj, String fieldName) {
-			Object result = null;
-			Field field = ReflectUtil.getField(obj, fieldName);
-			if (field != null) {
-				field.setAccessible(true);
-				try {
-					result = field.get(obj);
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			return result;
-		}
-
-		/**
-		 * 利用反射获取指定对象里面的指定属性
-		 * 
-		 * @param obj       目标对象
-		 * @param fieldName 目标属性
-		 * @return 目标字段
-		 */
-		private static Field getField(Object obj, String fieldName) {
-			Field field = null;
-			for (Class<?> clazz = obj.getClass(); clazz != Object.class; clazz = clazz.getSuperclass()) {
-				try {
-					field = clazz.getDeclaredField(fieldName);
-					break;
-				} catch (NoSuchFieldException e) {
-					// 这里不用做处理，子类没有该字段可能对应的父类有，都没有就返回null。
-				}
-			}
-			return field;
-		}
-
-		/**
-		 * 利用反射设置指定对象的指定属性为指定的值
-		 * 
-		 * @param obj        目标对象
-		 * @param fieldName  目标属性
-		 * @param fieldValue 目标值
-		 */
-		public static void setFieldValue(Object obj, String fieldName, String fieldValue) {
-			Field field = ReflectUtil.getField(obj, fieldName);
-			if (field != null) {
-				try {
-					field.setAccessible(true);
-					field.set(obj, fieldValue);
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+	/*
+	 * @Override public Object plugin(Object target) { return Plugin.wrap(target,
+	 * this); }
+	 * 
+	 * @Override public void setProperties(Properties properties) {
+	 * 
+	 * }
+	 */
 
 }

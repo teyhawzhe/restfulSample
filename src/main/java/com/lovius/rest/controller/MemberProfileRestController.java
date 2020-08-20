@@ -10,6 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +23,12 @@ import com.lovius.serviceInterface.MemberProfileService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping(value = "/member/profile")
 @Api(tags = "會員資料", description = "尋找、新增、.更新、.刪除會員資料")
+@Slf4j
 public class MemberProfileRestController {
 
 	@Autowired
@@ -38,6 +41,14 @@ public class MemberProfileRestController {
 		List<MemberProfile> memberProfileLists = memberProfileService.findAllOrderById();
 
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfileLists);
+	}
+	
+	@ApiOperation(value = "尋找所有會員資料", notes = "依據ID排序")
+	@GetMapping("/{id}")
+	public RMessage findById(@PathVariable("id") String id) {
+		MemberProfile memberProfile = memberProfileService.findById(id);
+		//log.info("memberProfile = " +memberProfile.toString());
+		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfile);
 	}
 
 	@ApiOperation(value = "更新會員資料", notes = "依據ID作更新")

@@ -8,6 +8,8 @@ public interface MemberProfileService {
 	
 	public List<MemberProfile> findAllOrderById();
 	
+	public MemberProfile findById(String id);
+	
 	public void update(MemberProfile memberProfile);
 	
 	public void updateDynamic(MemberProfile memberProfile);
