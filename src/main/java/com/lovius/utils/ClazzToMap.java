@@ -2,10 +2,14 @@ package com.lovius.utils;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClazzToMap {
 
 	public static Map<String, Object> handle(Object obj) throws IllegalArgumentException, IllegalAccessException {
@@ -22,15 +26,35 @@ public class ClazzToMap {
 			if (field.getName().equals("serialVersionUID")) {
 				continue;
 			}
-
-			map.put(colTrans(field.getName()), field.get(obj));
+			
+			if(field.get(obj) instanceof String) {
+				map.put(colTrans(field.getName()), field.get(obj));
+			}else if(field.get(obj) instanceof Number) {
+				map.put(colTrans(field.getName()), field.get(obj));
+			}else if(field.get(obj) instanceof Iterable) {
+				log.info("col is Iterable  ");
+			}else if(field.get(obj) instanceof Map) {
+				log.info("col is Map  ");
+			}else if(field.get(obj) instanceof Object){
+				log.info("col is Class  ");
+				Object subObject = field.get(obj);
+				
+				Field[] subDeclaredFields = subObject.getClass().getDeclaredFields();
+				for (Field subField : subDeclaredFields) {
+					subField.setAccessible(true);
+					if (subField.getName().equals("serialVersionUID")) {
+						continue;
+					}
+					map.put(colTrans(subField.getName()), subField.get(subObject));
+				}
+			}
+			
 		}
-
 		return map;
 
 	}
 
-	public static String colTrans(String colName) {
+	private static String colTrans(String colName) {
 
 		if (StringUtils.isBlank(colName)) {
 			return null;

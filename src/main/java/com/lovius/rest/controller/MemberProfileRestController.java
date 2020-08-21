@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lovius.common.RMessage;
 import com.lovius.common.ResponseMessage;
 import com.lovius.model.MemberProfile;
-import com.lovius.serviceInterface.MemberProfileService;
+import com.lovius.service.interfaces.MemberProfileService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -57,8 +57,6 @@ public class MemberProfileRestController {
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.findSuccess, memberProfile);
 	}
 
-	
-	
 	@ApiOperation(value = "更新會員資料", notes = "依據ID作更新")
 	@PutMapping
 	public RMessage updateById(@Valid MemberProfile memberProfile, BindingResult br) throws Exception {
@@ -98,17 +96,17 @@ public class MemberProfileRestController {
 			for (ObjectError index : br.getAllErrors()) {
 				sb.append(index.getDefaultMessage() + "\n");
 			}
-			return new RMessage(HttpStatus.OK.value(), ResponseMessage.updateFailed, sb.toString());
+			return new RMessage(HttpStatus.OK.value(), ResponseMessage.insertFailed, sb.toString());
 		}
-		
-		memberProfileService.update(memberProfile);
+		memberProfileService.insert(memberProfile);
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.insertSuccess);
 	}
 
 	@ApiOperation(value = "刪除會員資料", notes = "以ID刪除會員資料")
 	@DeleteMapping
-	public RMessage delete(String memberId) {
-
+	public RMessage delete(String memberId) throws Exception {
+		log.info("memberId " + memberId);
+		memberProfileService.delete(memberId);
 		return new RMessage(HttpStatus.OK.value(), ResponseMessage.deleteSuccess);
 	}
 

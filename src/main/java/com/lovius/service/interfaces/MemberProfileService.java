@@ -1,4 +1,4 @@
-package com.lovius.serviceInterface;
+package com.lovius.service.interfaces;
 
 import java.util.List;
 
@@ -12,8 +12,11 @@ public interface MemberProfileService {
 	
 	public MemberProfile findByIdDymanicIn() throws Exception;
 
+	public void insert(MemberProfile memberProfile)  throws Exception;
+	
 	public void update(MemberProfile memberProfile) throws Exception;
 
 	public void updateDynamic(MemberProfile memberProfile) throws Exception;
 
+	public void delete(String id) throws Exception;
 }

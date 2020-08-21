@@ -5,12 +5,16 @@ import java.util.Map;
 
 import javax.annotation.PreDestroy;
 
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.lovius.model.MemberProfile;
+import com.lovius.sqlProvider.MemberProfileSqlProvider;
 
 @Mapper
 public interface MemberProfileRepository {
@@ -58,5 +62,9 @@ public interface MemberProfileRepository {
 	"</script>"})
 	public void updateDynamic(Map<String,Object> param);
 	
+	@Insert("INSERT INTO MEMBER_PROFILE VALUES (#{ID},#{NAME},#{NICK_NAME},#{SEX},#{AGE},#{TEL},#{ADDRESS})")
+	public void insert(Map<String,Object> param);
 	
+	@DeleteProvider(type = MemberProfileSqlProvider.class , method = "delete")
+	public void delete(Map<String,Object> param);
 }

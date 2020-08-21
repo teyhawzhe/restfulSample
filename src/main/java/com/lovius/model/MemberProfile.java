@@ -28,19 +28,19 @@ public class MemberProfile implements Serializable {
 	private static final long serialVersionUID = 1924112708509814902L;
 
 	@Id
-	@ApiModelProperty(value = "用戶ID", required = true , example = "lovius" )
+	@ApiModelProperty(value = "用戶ID", required = true , example = "peter" )
 	@Column(unique = true, length = 20, nullable = false)
 	@NotBlank(message = "請填寫用戶ID")
 	@Size(min = 1, max = 20, message = "用戶ID長度介於1到20之間")
 	private String id;
 
-	@ApiModelProperty(value = "姓名", required = true  , example = "鄭顥擇" )
+	@ApiModelProperty(value = "姓名", required = true  , example = "彼得" )
 	@Column(length = 20, nullable = false)
 	@NotBlank(message = "請填寫姓名")
 	@Size(min = 1, max = 20, message = "姓名長度介於1到20之間")
 	private String name;
 
-	@ApiModelProperty(value = "小名", required = true  , example = "阿澤" )
+	@ApiModelProperty(value = "小名", required = true  , example = "小得" )
 	@Column(length = 20, nullable = false)
 	@NotBlank(message = "請填寫小名")
 	@Size(min = 1, max = 20, message = "小名長度介於1到20之間")
@@ -58,14 +58,14 @@ public class MemberProfile implements Serializable {
 	@Min(value = 0, message = "年齡不能為負數")
 	private int age;
 
-	@ApiModelProperty(value = "電話", required = true)
+	@ApiModelProperty(value = "電話", required = true , example = "0900-000000")
 	@Column(length = 20, nullable = false)
 	@NotBlank(message = "請填寫電話")
 	@Size(min = 1, max = 20, message = "用戶ID長度介於1到20之間")
 	@Pattern(regexp = "[0-9]{4}-[0-9]{6}",message = "電話格式因該是0901-234567")
 	private String tel;
 
-	@ApiModelProperty(value = "地址", required = true  , example = "淡水" )
+	@ApiModelProperty(value = "地址", required = true  , example = "台灣" )
 	@Column(length = 50, nullable = false)
 	@NotBlank(message = "請填寫地址")
 	@Size(min = 1, max = 50, message = "地址長度介於1到20之間")
