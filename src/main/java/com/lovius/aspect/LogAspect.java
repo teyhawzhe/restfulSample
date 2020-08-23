@@ -93,12 +93,12 @@ public class LogAspect {
 		combineLog(joinPoint,4,result);
 	}
 	
-	@Before("execution(* com.lovius.intercepts..*(..)) ")
+	/*@Before("execution(* com.lovius.intercepts..*(..)) ")
 	public void sqlInterceptorAfterReturn(JoinPoint joinPoint) throws Exception {
 		
 		log.info("hhahahahh");
 		//combineLog(joinPoint,4,result);
-	}
+	}*/
 	
 	public void combineLog(JoinPoint joinPoint,int level) throws Exception {
 		combineLog(joinPoint,level, null);

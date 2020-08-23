@@ -1,10 +1,15 @@
 package com.lovius.intercepts;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
@@ -17,7 +22,10 @@ import org.apache.ibatis.plugin.Invocation;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.lovius.utils.DataUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,19 +34,47 @@ import lombok.extern.slf4j.Slf4j;
 		@Signature(method = "query", type = Executor.class, args = { MappedStatement.class, Object.class,
 				RowBounds.class, ResultHandler.class }),
 		@Signature(method = "prepare", type = StatementHandler.class, args = { Connection.class, Integer.class }),
-		@Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class })
-})
+		@Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class }) })
 @Slf4j
 public class SqlInterceptor implements Interceptor {
-	
+
+	@Autowired
+	private DataSource datsSource;
+
+	@Autowired
+	private HttpServletRequest request;
+
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 
 		if (invocation.getTarget() instanceof StatementHandler) {
-			genSql(invocation);
+			recordLog(genSql(invocation));
 		}
 		return invocation.proceed();
 
+	}
+
+	private void recordLog(String sql) throws SQLException {
+
+		if (null != request.getAttribute("ME-SEQNO")) {
+
+			StringBuffer sb = new StringBuffer();
+			sb.append("INSERT INTO PUBLIC.SYS_LOG ");
+			sb.append("(SEQNO, LEVEL, API, CLASS_NAME, CLASS_FUNCTION, IN_ARGS, OUT_ARGS, SYS_DATE, SYS_TIME) ");
+			sb.append("VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			Connection con = datsSource.getConnection();
+			PreparedStatement ps = con.prepareStatement(sb.toString());
+			ps.setString(1, (String) request.getAttribute("ME-SEQNO"));
+			ps.setInt(2, 4);
+			ps.setString(3, request.getRequestURI());
+			ps.setString(4, "com.lovius.intercepts.SqlInterceptor");
+			ps.setString(5, "intercept");
+			ps.setString(6, sql);
+			ps.setString(7, null);
+			ps.setString(8, DataUtils.currentYYYYMMDD());
+			ps.setString(9, DataUtils.currentHHMMSSSSS());
+			ps.execute();
+		}
 	}
 
 	public String genSql(Invocation invocation) {
@@ -60,8 +96,8 @@ public class SqlInterceptor implements Interceptor {
 			}
 		}
 
-		Map<String,Object> parameterObject = (Map<String, Object>) boundSql.getParameterObject();
-		for(String index : paramKey) {			
+		Map<String, Object> parameterObject = (Map<String, Object>) boundSql.getParameterObject();
+		for (String index : paramKey) {
 			Object value = parameterObject.get(index);
 			if (value instanceof List) {
 				List<Object> valueList = (List<Object>) value;
@@ -78,14 +114,13 @@ public class SqlInterceptor implements Interceptor {
 				sql = sql.replaceFirst("\\?", "'" + value + "'");
 			}
 		}
-	 
+
 		log.info("----------------------------------------------------------");
 		log.info("Sql merge->" + sql);
 		log.info("----------------------------------------------------------");
 		return sql;
 	}
-	
-	
+
 	/*
 	 * @Override public Object plugin(Object target) { return Plugin.wrap(target,
 	 * this); }
