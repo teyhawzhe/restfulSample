@@ -121,7 +121,7 @@ public class LogAspect {
 		sysLogPk.setSysDate(DataUtils.currentYYYYMMDD());
 		sysLogPk.setSysTime(DataUtils.currentHHMMSSSSS());
 		sysLog.setSysLogPk(sysLogPk);
-		sysLog.setApi("request.getRequestURI()");
+		sysLog.setApi(request.getRequestURI());
 		sysLog.setClassName(joinPoint.getSignature().getDeclaringTypeName());
 		sysLog.setClassFunction(joinPoint.getSignature().getName());
 		Object[] signatureArgs = joinPoint.getArgs();

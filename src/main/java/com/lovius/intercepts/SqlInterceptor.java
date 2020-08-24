@@ -44,11 +44,16 @@ public class SqlInterceptor implements Interceptor {
 	@Autowired
 	private HttpServletRequest request;
 
+	private final String exclude= "SYS_LOG";
+	
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 
 		if (invocation.getTarget() instanceof StatementHandler) {
-			recordLog(genSql(invocation));
+			String sql = genSql(invocation);
+			if(!sql.contains(exclude)) {
+				recordLog(sql);
+			}
 		}
 		return invocation.proceed();
 
@@ -59,13 +64,13 @@ public class SqlInterceptor implements Interceptor {
 		if (null != request.getAttribute("ME-SEQNO")) {
 
 			StringBuffer sb = new StringBuffer();
-			sb.append("INSERT INTO PUBLIC.SYS_LOG ");
+			sb.append("INSERT INTO SYS_LOG ");
 			sb.append("(SEQNO, LEVEL, API, CLASS_NAME, CLASS_FUNCTION, IN_ARGS, OUT_ARGS, SYS_DATE, SYS_TIME) ");
 			sb.append("VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			Connection con = datsSource.getConnection();
 			PreparedStatement ps = con.prepareStatement(sb.toString());
 			ps.setString(1, (String) request.getAttribute("ME-SEQNO"));
-			ps.setInt(2, 4);
+			ps.setInt(2, 3);
 			ps.setString(3, request.getRequestURI());
 			ps.setString(4, "com.lovius.intercepts.SqlInterceptor");
 			ps.setString(5, "intercept");
