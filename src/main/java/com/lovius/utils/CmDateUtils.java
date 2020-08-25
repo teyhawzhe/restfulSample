@@ -3,7 +3,7 @@ package com.lovius.utils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class DataUtils {
+public class CmDateUtils {
 
 	public static String currentYYYYMMDD() {
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd");  

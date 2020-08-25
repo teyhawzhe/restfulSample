@@ -25,7 +25,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.lovius.utils.DataUtils;
+import com.lovius.utils.CmDateUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,8 +76,8 @@ public class SqlInterceptor implements Interceptor {
 			ps.setString(5, "intercept");
 			ps.setString(6, sql);
 			ps.setString(7, null);
-			ps.setString(8, DataUtils.currentYYYYMMDD());
-			ps.setString(9, DataUtils.currentHHMMSSSSS());
+			ps.setString(8, CmDateUtils.currentYYYYMMDD());
+			ps.setString(9, CmDateUtils.currentHHMMSSSSS());
 			ps.execute();
 		}
 	}

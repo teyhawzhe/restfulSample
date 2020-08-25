@@ -3,6 +3,7 @@ package com.lovius.common;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.lovius.common.exception.DeleteRollBackException;
 import com.lovius.common.exception.InsertRollBackException;
 import com.lovius.common.exception.UpdateRollBackException;
+import com.lovius.common.log.service.interfaces.SysLogService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExceptionAdvice {
 
+	@Autowired
+	private SysLogService sysLogService;
+	
 	@ExceptionHandler(value = Exception.class)
 	public RMessage exceptionHandle(Exception ex) {
 		StringWriter stack = new StringWriter();

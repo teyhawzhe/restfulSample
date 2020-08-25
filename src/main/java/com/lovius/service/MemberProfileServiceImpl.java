@@ -29,9 +29,9 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 	@Override
 	public List<MemberProfile> findAllOrderById() throws Exception {
 		
-		throw new Exception("HH");
+		//throw new Exception("HH");
 		
-		//return memberProfileRepository.findAllOrderById();
+		return memberProfileRepository.findAllOrderById();
 	}
 
 	@Transactional(rollbackFor = UpdateRollBackException.class)
