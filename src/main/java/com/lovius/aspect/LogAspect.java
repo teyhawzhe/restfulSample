@@ -7,14 +7,12 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.lovius.common.RMessage;
-import com.lovius.common.log.repository.LogSeqRepository;
-import com.lovius.common.log.service.interfaces.SysLogService;
 import com.lovius.model.SysLog;
-import com.lovius.model.SysLogPk;
+import com.lovius.service.interfaces.SeqService;
+import com.lovius.service.interfaces.SysLogService;
 import com.lovius.utils.CmDateUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,104 +26,77 @@ public class LogAspect {
 	private HttpServletRequest request;
 
 	@Autowired
-	private LogSeqRepository logSeqRepository;
+	private SeqService seqService;
 
 	@Autowired
 	private SysLogService sysLogService;
 
-	@Before("@annotation(org.springframework.web.bind.annotation.GetMapping)")
-	public void getMappingBefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 0);
+	@Pointcut("@annotation(org.springframework.web.bind.annotation.GetMapping)")
+	public void getMappingJointPoint() {
 	}
 
-	@AfterReturning(pointcut = "@annotation(org.springframework.web.bind.annotation.GetMapping)", returning = "result")
-	public void getMappingAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 6, result);
+	@Pointcut("@annotation(org.springframework.web.bind.annotation.PostMapping)")
+	public void postMappingJointPoint() {
 	}
 
-	@Before("@annotation(org.springframework.web.bind.annotation.PostMapping)")
-	public void postMappingBefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 0);
+	@Pointcut("@annotation(org.springframework.web.bind.annotation.PutMapping)")
+	public void putMappingJointPoint() {
 	}
 
-	@AfterReturning(pointcut = "@annotation(org.springframework.web.bind.annotation.PostMapping)", returning = "result")
-	public void postMappingAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 6, result);
+	@Pointcut("@annotation(org.springframework.web.bind.annotation.DeleteMapping)")
+	public void deleteMappingJointPoint() {
 	}
 
-	@Before("@annotation(org.springframework.web.bind.annotation.PutMapping)")
-	public void putMappingBefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 0);
+	@Pointcut("execution(* com.lovius.service..*(..))")
+	public void serviceJointPoint() {
 	}
 
-	@AfterReturning(pointcut = "@annotation(org.springframework.web.bind.annotation.PutMapping)", returning = "result")
-	public void putMappingAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 6, result);
+	@Pointcut("!execution(* com.lovius.service.SysLogServiceImpl.*(..)) && !execution(* com.lovius.service.SeqServiceImpl.*(..))")
+	public void excludeServiceJointPoint() {
 	}
 
-	@Before("@annotation(org.springframework.web.bind.annotation.DeleteMapping)")
-	public void deleteMappingBefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 0);
+	@Pointcut("execution(* com.lovius.repository..*(..))")
+	public void repositoryJointPoint() {
 	}
 
-	@AfterReturning(pointcut = "@annotation(org.springframework.web.bind.annotation.DeleteMapping)", returning = "result")
-	public void deleteMappingAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 6, result);
+	@Pointcut("!execution(* com.lovius.repository.SeqRepository.*(..)) && !execution(* com.lovius.repository.SysLogRepository.*(..))")
+	public void excludeRepositoryJointPoint() {
+	}
+	
+
+	@Before("getMappingJointPoint() || postMappingJointPoint() || putMappingJointPoint() || deleteMappingJointPoint() ||  (serviceJointPoint() && excludeServiceJointPoint()) || (repositoryJointPoint() && excludeRepositoryJointPoint())")
+	public void before(JoinPoint joinPoint) throws Exception {
+		combineLog(joinPoint);
+	}
+	
+	@AfterReturning(pointcut = "getMappingJointPoint() || postMappingJointPoint() || putMappingJointPoint() || deleteMappingJointPoint() ||  (serviceJointPoint() && excludeServiceJointPoint()) || (repositoryJointPoint() && excludeRepositoryJointPoint())", returning = "result")
+	public void afterReturn(JoinPoint joinPoint, Object result) throws Exception {
+		combineLog(joinPoint, result);
 	}
 
-	@Before("execution(* com.lovius.service..*(..))")
-	public void serviceBefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 1);
-	}
-
-	@AfterReturning(pointcut = "execution(* com.lovius.service..*(..))", returning = "result")
-	public void serviceAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 5, result);
-	}
-
-	@Before("execution(* com.lovius.repository..*(..)) ")
-	public void repositorybefore(JoinPoint joinPoint) throws Exception {
-		combineLog(joinPoint, 2);
-	}
-
-	@AfterReturning(pointcut = "execution(* com.lovius.repository..*(..))", returning = "result")
-	public void repositoryAfterReturn(JoinPoint joinPoint, Object result) throws Exception {
-		combineLog(joinPoint, 4, result);
-	}
-
-	/*
-	 * @Before("execution(* com.lovius.intercepts..*(..)) ") public void
-	 * sqlInterceptorAfterReturn(JoinPoint joinPoint) throws Exception {
-	 * 
-	 * log.info("hhahahahh"); //combineLog(joinPoint,4,result); }
-	 */
-
-	public void combineLog(JoinPoint joinPoint, int level) throws Exception {
-		combineLog(joinPoint, level, null);
+	public void combineLog(JoinPoint joinPoint) throws Exception {
+		combineLog(joinPoint, null);
 	}
 
 	// 組合要insert到DB
-	public void combineLog(JoinPoint joinPoint, int level, Object result) throws Exception {
+	public void combineLog(JoinPoint joinPoint, Object result) throws Exception {
 		try {
 			// 取得API執行序號
 			String seq = (String) request.getAttribute("ME-SEQNO");
 			SysLog sysLog = new SysLog();
-			SysLogPk sysLogPk = new SysLogPk();
 			if (null != seq) {
-				sysLogPk.setSeqno(seq);
+				sysLog.setSeqNo(seq);
 			} else {
-				sysLogPk.setSeqno(CmDateUtils.currentYYYYMMDD()
-						+ StringUtils.leftPad(String.valueOf(logSeqRepository.getLogSeq()), 10, '0'));
-				request.setAttribute("ME-SEQNO", sysLogPk.getSeqno());
+				sysLog.setSeqNo(CmDateUtils.currentYYYYMMDD()
+						+ StringUtils.leftPad(String.valueOf(seqService.getLogSeq()), 10, '0'));
+				request.setAttribute("ME-SEQNO", sysLog.getSeqNo());
 			}
-
-			sysLogPk.setLevel(level);
-			sysLogPk.setSysDate(CmDateUtils.currentYYYYMMDD());
-			sysLogPk.setSysTime(CmDateUtils.currentHHMMSSSSS());
-			sysLog.setSysLogPk(sysLogPk);
+			sysLog.setSysDate(CmDateUtils.currentYYYYMMDD());
+			sysLog.setSysTime(CmDateUtils.currentHHMMSS());
 			sysLog.setApi(request.getRequestURI());
 			sysLog.setClassName(joinPoint.getSignature().getDeclaringTypeName());
-			sysLog.setClassFunction(joinPoint.getSignature().getName());
+			sysLog.setClassMethod(joinPoint.getSignature().getName());
+			sysLog.setUri(request.getRemoteAddr());
 			Object[] signatureArgs = joinPoint.getArgs();
 			StringBuffer sb = new StringBuffer();
 			for (Object signatureArg : signatureArgs) {
@@ -134,7 +105,6 @@ public class LogAspect {
 			sysLog.setInArgs(sb.toString());
 
 			if (null != result) {
-				// RMessage rm = (RMessage) result;
 				sysLog.setOutArgs(result.toString());
 			}
 			sysLogService.insert(sysLog);

@@ -1,4 +1,4 @@
-package com.lovius.common.log.service;
+package com.lovius.service;
 
 import java.util.List;
 import java.util.Map;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.lovius.common.exception.InsertRollBackException;
-import com.lovius.common.log.repository.SysLogRepository;
-import com.lovius.common.log.service.interfaces.SysLogService;
 import com.lovius.model.SysLog;
+import com.lovius.repository.SysLogRepository;
+import com.lovius.service.interfaces.SysLogService;
 import com.lovius.utils.ClazzToMap;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +27,7 @@ public class SysLogServiceImpl implements SysLogService {
 	public void insert(SysLog param) throws Exception {
 		try {
 			Map<String,Object> params = ClazzToMap.handle(param);
+			params.put("SUB_SEQ", param.getSeqNo());
 			sysLogRepository.insert(params);
 		}catch (Exception e) {
 			throw new InsertRollBackException();

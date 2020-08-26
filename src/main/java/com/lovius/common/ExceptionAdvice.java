@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.lovius.common.exception.DeleteRollBackException;
 import com.lovius.common.exception.InsertRollBackException;
 import com.lovius.common.exception.UpdateRollBackException;
-import com.lovius.common.log.service.interfaces.SysLogService;
+import com.lovius.service.interfaces.SysLogService;
 
 import lombok.extern.slf4j.Slf4j;
 
