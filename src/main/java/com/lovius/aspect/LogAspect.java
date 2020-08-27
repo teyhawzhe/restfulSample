@@ -62,7 +62,6 @@ public class LogAspect {
 	@Pointcut("!execution(* com.lovius.repository.SeqRepository.*(..)) && !execution(* com.lovius.repository.SysLogRepository.*(..))")
 	public void excludeRepositoryJointPoint() {
 	}
-	
 
 	@Before("getMappingJointPoint() || postMappingJointPoint() || putMappingJointPoint() || deleteMappingJointPoint() ||  (serviceJointPoint() && excludeServiceJointPoint()) || (repositoryJointPoint() && excludeRepositoryJointPoint())")
 	public void before(JoinPoint joinPoint) throws Exception {
@@ -83,6 +82,9 @@ public class LogAspect {
 		try {
 			// 取得API執行序號
 			String seq = (String) request.getAttribute("ME-SEQNO");
+			
+			String lvl =  (String) request.getAttribute("Lvl");
+			
 			SysLog sysLog = new SysLog();
 			if (null != seq) {
 				sysLog.setSeqNo(seq);
@@ -91,19 +93,33 @@ public class LogAspect {
 						+ StringUtils.leftPad(String.valueOf(seqService.getLogSeq()), 10, '0'));
 				request.setAttribute("ME-SEQNO", sysLog.getSeqNo());
 			}
+			if(null == lvl) {
+				lvl = "1";
+				request.setAttribute("Lvl", lvl);
+				sysLog.setLvl(Integer.valueOf(lvl));
+			}else {
+				lvl =  String.valueOf( Integer.valueOf(lvl) + 1 );
+				request.setAttribute("Lvl", lvl);
+				sysLog.setLvl(Integer.valueOf(lvl));
+			}
+			
 			sysLog.setSysDate(CmDateUtils.currentYYYYMMDD());
 			sysLog.setSysTime(CmDateUtils.currentHHMMSS());
 			sysLog.setApi(request.getRequestURI());
 			sysLog.setClassName(joinPoint.getSignature().getDeclaringTypeName());
 			sysLog.setClassMethod(joinPoint.getSignature().getName());
 			sysLog.setUri(request.getRemoteAddr());
+			sysLog.setAp(request.getContextPath());
 			Object[] signatureArgs = joinPoint.getArgs();
 			StringBuffer sb = new StringBuffer();
 			for (Object signatureArg : signatureArgs) {
 				sb.append(signatureArg);
 			}
-			sysLog.setInArgs(sb.toString());
-
+			
+			if(sb.length()>0) {
+				sysLog.setInArgs(sb.toString());
+			}
+			
 			if (null != result) {
 				sysLog.setOutArgs(result.toString());
 			}

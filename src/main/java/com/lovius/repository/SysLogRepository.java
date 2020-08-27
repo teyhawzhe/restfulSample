@@ -9,8 +9,8 @@ import org.apache.ibatis.annotations.Mapper;
 public interface SysLogRepository{
 
 	@Insert("INSERT INTO SYS_LOG "
-			+ "(SEQ_NO, LVL, API, CLASS_NAME, CLASS_METHOD, IN_ARGS, OUT_ARGS, SQL_TEXT, ERROR, SYS_DATE, SYS_TIME, URI) "
-			+ "VALUES(#{SEQ_NO}, NVL(SELECT max(LVL) FROM SYS_LOG WHERE SEQ_NO =  #{SUB_SEQ} ,0 )+1, #{API}, #{CLASS_NAME}, #{CLASS_METHOD}, #{IN_ARGS}, #{OUT_ARGS}, #{SQL_TEXT}, #{ERROR}, #{SYS_DATE}, #{SYS_TIME}, #{URI})")
+			+ "(SEQ_NO, LVL, API, CLASS_NAME, CLASS_METHOD, IN_ARGS, OUT_ARGS, SQL_TEXT, ERROR, SYS_DATE, SYS_TIME, URI , AP) "
+			+ "VALUES(#{SEQ_NO}, #{LVL}, #{API}, #{CLASS_NAME}, #{CLASS_METHOD}, #{IN_ARGS}, #{OUT_ARGS}, #{SQL_TEXT}, #{ERROR}, #{SYS_DATE}, #{SYS_TIME}, #{URI}, #{AP})")
 	public void insert(Map<String, Object> params) throws Exception ;
 
 	public void update(Map<String, Object> params) throws Exception ;

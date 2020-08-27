@@ -1,5 +1,6 @@
 package com.lovius.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,9 @@ public class MemberProfileServiceImpl implements MemberProfileService {
 	@Transactional(readOnly = true)
 	@Override
 	public MemberProfile findByIdDymanicIn() throws Exception {
-		List<String> ids=List.of("lovius", "1", "2", "3");
+		List<String> ids= new ArrayList<>(); 
+		ids.add("lovius");
+		ids.add("lovius");
 		Map<String, Object> param = new HashMap<>();
 		param.put("id", ids);
 		return memberProfileRepository.findByIdDymaicIn(param);

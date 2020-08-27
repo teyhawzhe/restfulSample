@@ -49,9 +49,6 @@ public class SqlInterceptor implements Interceptor {
 	@Autowired
 	private HttpServletRequest request;
 
-	@Autowired
-	private SysLogService sysLogService;
-	
 	private final String exclude = "SYS_LOG";
 
 	@Override
@@ -78,14 +75,30 @@ public class SqlInterceptor implements Interceptor {
 
 		try {
 			if (null != request.getAttribute("ME-SEQNO")) {
-				/*StringBuffer sb = new StringBuffer();
+				StringBuffer sb = new StringBuffer();
 				sb.append("INSERT INTO SYS_LOG ");
-				sb.append("(SEQ_NO, LVL, API, CLASS_NAME, CLASS_METHOD, SQL_TEXT, SYS_DATE, SYS_TIME, URI) ");
-				sb.append("VALUES(?, NVL(SELECT max(LVL) FROM SYS_LOG WHERE SEQ_NO = ? ,0 )+1, ?, ?, ?, ?, ?, ?, ?)");
+				sb.append("(SEQ_NO, LVL, API, CLASS_NAME, CLASS_METHOD, SQL_TEXT, SYS_DATE, SYS_TIME, URI, AP) ");
+				sb.append("VALUES(?, ? , ?, ?, ?, ?, ?, ?, ? , ?)");
 				Connection con = datsSource.getConnection();
 				PreparedStatement ps = con.prepareStatement(sb.toString());
 				ps.setString(1, (String) request.getAttribute("ME-SEQNO"));
-				ps.setString(2, (String) request.getAttribute("ME-SEQNO"));
+
+				String lvl =  (String) request.getAttribute("Lvl");
+				
+				if(null == lvl) {
+					lvl = "1";
+					request.setAttribute("Lvl", lvl);
+					ps.setString(2, lvl);
+				}else {
+					lvl =  String.valueOf( Integer.valueOf(lvl) + 1 );
+					request.setAttribute("Lvl", lvl);
+					ps.setString(2, lvl);
+				}
+				
+				
+				request.setAttribute("Lvl", lvl);
+				ps.setString(2, lvl);
+				
 				ps.setString(3, request.getRequestURI());
 				ps.setString(4, "com.lovius.intercepts.SqlInterceptor");
 				ps.setString(5, "intercept");
@@ -93,20 +106,9 @@ public class SqlInterceptor implements Interceptor {
 				ps.setString(7, CmDateUtils.currentYYYYMMDD());
 				ps.setString(8, CmDateUtils.currentHHMMSS());
 				ps.setString(9, request.getRemoteAddr());
-				ps.execute();*/
-				
-				String seq = (String) request.getAttribute("ME-SEQNO");
-				SysLog sysLog = new SysLog();
-				sysLog.setSeqNo(seq);
-				sysLog.setSysDate(CmDateUtils.currentYYYYMMDD());
-				sysLog.setSysTime(CmDateUtils.currentHHMMSS());
-				sysLog.setApi(request.getRequestURI());
-				sysLog.setClassName("com.lovius.intercepts.SqlInterceptor");
-				sysLog.setClassMethod("intercept");
-				sysLog.setUri(request.getRemoteAddr());
-				sysLog.setSqlText(sql);
-				sysLogService.insert(sysLog);
-				
+				ps.setString(10, request.getContextPath());
+				ps.execute();
+
 			}
 		} catch (Exception ex) {
 			StringWriter stack = new StringWriter();

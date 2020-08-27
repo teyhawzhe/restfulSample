@@ -44,5 +44,7 @@ public class SysLog implements Serializable {
 	private String sysTime;
 	
 	private String uri;
+	
+	private String ap;
 
 }

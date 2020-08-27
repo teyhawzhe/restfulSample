@@ -27,7 +27,6 @@ public class SysLogServiceImpl implements SysLogService {
 	public void insert(SysLog param) throws Exception {
 		try {
 			Map<String,Object> params = ClazzToMap.handle(param);
-			params.put("SUB_SEQ", param.getSeqNo());
 			sysLogRepository.insert(params);
 		}catch (Exception e) {
 			throw new InsertRollBackException();
